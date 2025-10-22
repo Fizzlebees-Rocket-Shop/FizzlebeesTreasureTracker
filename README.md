@@ -27,6 +27,10 @@ Track mob kills and loot drops with intelligent drop rate calculation for World 
    ```
    World of Warcraft/_retail_/Interface/AddOns/
    ```
+   **Example path:**
+   ```
+   C:\Program Files (x86)\World of Warcraft\_retail_\Interface\AddOns\FizzlebeesTreasureTracker
+   ```
 4. Restart World of Warcraft
 5. Enable the addon in the AddOns menu
 
