@@ -54,6 +54,7 @@ jobs:
             --exclude='.github/' \
             --exclude='.gitignore' \
             --exclude='*.zip' \
+            --exclude='release/' \
             ./ release/FizzlebeesTreasureTracker/
 
           # Create ZIP archive
