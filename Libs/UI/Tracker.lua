@@ -18,6 +18,19 @@ local addonName, addon = ...
 local FTT = _G.FizzlebeesTreasureTracker
 local L = FTT.L
 
+-- Helper function to localize treasure names for display
+-- Database stores English "Treasure Find {Zone}", UI shows localized version
+local function LocalizeTreasureName(mobName)
+    -- Check if this is a treasure entry (English database format)
+    local zoneName = mobName:match("^Treasure Find (.+)$")
+    if zoneName then
+        -- Return localized treasure name
+        return string.format(L["TREASURE_NAME"], zoneName)
+    end
+    -- Not a treasure, return as-is
+    return mobName
+end
+
 -- Local references to constants for faster access
 local ENTRY_WIDTH = FTT.ENTRY_WIDTH
 local FRAME_WIDTH = FTT.FRAME_WIDTH
@@ -259,11 +272,15 @@ function FTT:UpdateDisplayInternal()
     end
 
     table.sort(sortedMobs, function(a, b)
-        local lastKillA = mobs[a].lastKillTime or 0
-        local lastKillB = mobs[b].lastKillTime or 0
+        -- For treasures, use lastSeen; for mobs, use lastKillTime
+        -- Check both isTreasure flag AND name pattern (for backwards compatibility)
+        local isTreasureA = mobs[a].isTreasure or a:match("^Treasure Find ")
+        local isTreasureB = mobs[b].isTreasure or b:match("^Treasure Find ")
+        local lastActivityA = isTreasureA and (mobs[a].lastSeen or 0) or (mobs[a].lastKillTime or 0)
+        local lastActivityB = isTreasureB and (mobs[b].lastSeen or 0) or (mobs[b].lastKillTime or 0)
 
-        -- Sort by most recent kill time (higher = more recent = top)
-        return lastKillA > lastKillB
+        -- Sort by most recent activity (higher = more recent = top)
+        return lastActivityA > lastActivityB
     end)
 
     -- Separate mobs into active and inactive (using Unix timestamps now)
@@ -274,10 +291,13 @@ function FTT:UpdateDisplayInternal()
 
     for _, mobName in ipairs(sortedMobs) do
         local mobData = mobs[mobName]
-        local lastKillTime = mobData.lastKillTime or 0
-        local timeSinceKill = currentTime - lastKillTime
+        -- For treasures, use lastSeen; for mobs, use lastKillTime
+        -- Check both isTreasure flag AND name pattern (for backwards compatibility)
+        local isTreasure = mobData.isTreasure or mobName:match("^Treasure Find ")
+        local lastActivity = isTreasure and (mobData.lastSeen or 0) or (mobData.lastKillTime or 0)
+        local timeSinceActivity = currentTime - lastActivity
 
-        if lastKillTime > 0 and timeSinceKill <= INACTIVE_THRESHOLD then
+        if lastActivity > 0 and timeSinceActivity <= INACTIVE_THRESHOLD then
             table.insert(activeMobs, mobName)
         else
             table.insert(inactiveMobs, mobName)
@@ -298,9 +318,27 @@ function FTT:UpdateDisplayInternal()
     -- Measure width for all mobs (both active and inactive)
     for _, mobName in ipairs(sortedMobs) do
         local mobData = mobs[mobName]
-        local sessionKills = self.sessionKills[mobName] or 0
-        local totalKills = mobData.kills
-        local headerText = string.format("%s: %d/%d", mobName, sessionKills, totalKills)
+        local headerText
+
+        -- Check both isTreasure flag AND name pattern (for backwards compatibility)
+        local isTreasure = mobData.isTreasure or mobName:match("^Treasure Find ")
+
+        if isTreasure then
+            -- For treasures, count total loot count
+            local totalLooted = 0
+            if mobData.loot then
+                for _, lootData in pairs(mobData.loot) do
+                    totalLooted = totalLooted + (lootData.count or 0)
+                end
+            end
+            local displayName = LocalizeTreasureName(mobName)
+            headerText = string.format("%s: Looted %dx", displayName, totalLooted)
+        else
+            -- For mobs, show kills as before
+            local sessionKills = self.sessionKills[mobName] or 0
+            local totalKills = mobData.kills
+            headerText = string.format("%s: %d/%d", mobName, sessionKills, totalKills)
+        end
 
         self.measureText:SetFontObject(GameFontNormal)
         self.measureText:SetText(headerText)
@@ -357,6 +395,9 @@ function FTT:UpdateDisplayInternal()
     -- Display entries
     local yOffset = 0
     local visibleEntries = 0
+
+    -- NOTE: Session gold is displayed per-mob in the header, not as a global summary
+    -- See headerText construction below for gold display implementation
 
     for index, item in ipairs(displayList) do
         -- Handle separator
@@ -443,10 +484,34 @@ function FTT:UpdateDisplayInternal()
                 local entry = self:GetEntry(visibleEntries)
                 entry.mobName = mobName
 
-                -- Format: "Mob Name: Session/Total"
-                local sessionKills = self.sessionKills[mobName] or 0
-                local totalKills = mobData.kills
-                local headerText = string.format("%s: %d/%d", mobName, sessionKills, totalKills)
+                -- Format header text based on whether it's a treasure or mob
+                -- Check both isTreasure flag AND name pattern (for backwards compatibility)
+                local isTreasure = mobData.isTreasure or mobName:match("^Treasure Find ")
+                local headerText
+                if isTreasure then
+                    -- For treasures, show session/total treasure loot count
+                    local sessionTreasureLootCount = self.sessionTreasureLootCount[mobName] or 0
+                    local totalTreasureLootCount = mobData.lootCount or 0
+                    local displayName = LocalizeTreasureName(mobName)
+
+                    -- Format: "Name  [gold]  session/total" (compact, no colons)
+                    headerText = displayName
+                    if mobData.sessionGold and mobData.sessionGold > 0 then
+                        headerText = headerText .. " |cffFFD700[" .. self:FormatMoney(mobData.sessionGold) .. "]|r"
+                    end
+                    headerText = headerText .. string.format("  %d/%d", sessionTreasureLootCount, totalTreasureLootCount)
+                else
+                    -- For mobs, show kills as before
+                    local sessionKills = self.sessionKills[mobName] or 0
+                    local totalKills = mobData.kills
+
+                    -- Format: "Name  [gold]  session/total"
+                    headerText = mobName
+                    if mobData.sessionGold and mobData.sessionGold > 0 then
+                        headerText = headerText .. " |cffFFD700[" .. self:FormatMoney(mobData.sessionGold) .. "]|r"
+                    end
+                    headerText = headerText .. string.format("  %d/%d", sessionKills, totalKills)
+                end
                 entry.text:SetText(headerText)
 
                 -- Initialize expanded state for new mobs
@@ -465,37 +530,43 @@ function FTT:UpdateDisplayInternal()
 
                 -- Sort loot by drop rate
                 local sortedLoot = {}
-                for itemName, lootData in pairs(mobData.loot) do
-                    -- Extract item ID for quality check and highlighting
-                    local itemID = lootData.link:match("item:(%d+)")
+                for itemID, lootData in pairs(mobData.loot) do
+                    -- Get display name from stored link
+                    local itemName = GetItemInfo(lootData.link) or itemID
+
+                    -- itemID is already the key, no need to extract
                     local isHighlightedItem = self.highlightedItemID and itemID and tostring(itemID) == tostring(self.highlightedItemID)
 
                     -- Skip hidden items (but NEVER hide highlighted items)
-                    if not self.hiddenItems[itemName] or isHighlightedItem then
+                    if not self.hiddenItems[itemID] or isHighlightedItem then
                         -- Get item quality from link
                         local _, _, itemQuality = GetItemInfo(lootData.link)
                         local minQuality = self.settings and self.settings.minItemQuality or 0
 
                         -- Check if item meets quality threshold (or is highlighted)
-                        local meetsQuality = isHighlightedItem or (itemQuality and itemQuality >= minQuality)
+                        -- If itemQuality is nil (item not in cache), show it anyway (fallback)
+                        local meetsQuality = isHighlightedItem or (itemQuality == nil) or (itemQuality >= minQuality)
 
                         -- If filter is active, only show the filtered item
                         if self.settings and self.settings.itemFilter and self.settings.itemFilter ~= "" then
                             if itemID == self.settings.itemFilter then
                                 if meetsQuality then
-                                    table.insert(sortedLoot, {name = itemName, data = lootData})
+                                    table.insert(sortedLoot, {name = itemName, id = itemID, data = lootData})
                                 end
                             end
                         else
                             -- No ID filter, just check quality
                             if meetsQuality then
-                                table.insert(sortedLoot, {name = itemName, data = lootData})
+                                table.insert(sortedLoot, {name = itemName, id = itemID, data = lootData})
                             end
                         end
                     end
                 end
                 table.sort(sortedLoot, function(a, b)
-                    return (a.data.count / mobData.kills) > (b.data.count / mobData.kills)
+                    -- For treasures, use lootCount; for mobs, use kills
+                    local isTreasure = mobData.isTreasure or mobName:match("^Treasure Find ")
+                    local eventCount = isTreasure and (mobData.lootCount or 1) or (mobData.kills or 1)
+                    return (a.data.count / eventCount) > (b.data.count / eventCount)
                 end)
 
                 -- Set visual state based on expanded status and whether there's loot
@@ -503,12 +574,14 @@ function FTT:UpdateDisplayInternal()
                 local isExpanded = self.expandedMobs[mobName]
                 entry.expanded = isExpanded
 
-                -- Check if mob is inactive (older than 5 minutes) - using Unix time now
+                -- Check if mob/treasure is inactive (older than 5 minutes) - using Unix time now
                 local currentTime = time()
-                local lastKillTime = mobData.lastKillTime or 0
-                local timeSinceKill = currentTime - lastKillTime
+                -- For treasures, use lastSeen; for mobs, use lastKillTime
+                local isTreasure = mobData.isTreasure or mobName:match("^Treasure Find ")
+                local lastActivity = isTreasure and (mobData.lastSeen or 0) or (mobData.lastKillTime or 0)
+                local timeSinceActivity = currentTime - lastActivity
                 local INACTIVE_THRESHOLD = 300  -- 5 minutes
-                local isInactive = (lastKillTime == 0 or timeSinceKill > INACTIVE_THRESHOLD)
+                local isInactive = (lastActivity == 0 or timeSinceActivity > INACTIVE_THRESHOLD)
 
                 -- Apply transparency for inactive mobs
                 if isInactive then
@@ -601,21 +674,24 @@ function FTT:UpdateDisplayInternal()
                     local ratioText = lineButton.ratioText
 
                     -- Get session and total loot counts
+                    -- NOTE: item.id is the key in sessionLoot (itemID)
                     local sessionLootCount = 0
-                    if self.sessionLoot[mobName] and self.sessionLoot[mobName][item.name] then
-                        sessionLootCount = self.sessionLoot[mobName][item.name]
+                    if self.sessionLoot[mobName] and self.sessionLoot[mobName][item.id] then
+                        sessionLootCount = self.sessionLoot[mobName][item.id]
                     end
                     local totalLootCount = item.data.count
 
-                    -- Calculate drops per kill (average)
-                    local dropsPerKill = totalLootCount / mobData.kills
+                    -- Calculate drops per kill (or per loot event for treasures)
+                    local isTreasure = mobData.isTreasure or mobName:match("^Treasure Find ")
+                    local eventCount = isTreasure and (mobData.lootCount or 1) or mobData.kills
+                    local dropsPerEvent = eventCount > 0 and (totalLootCount / eventCount) or 0
 
                     -- Set text for each column
                     nameText:SetText(item.name)
                     countText:SetText(string.format("%d/%d", sessionLootCount, totalLootCount))
 
                     -- Calculate ratio as 1:X
-                    local ratio = dropsPerKill > 0 and (1 / dropsPerKill) or 999
+                    local ratio = dropsPerEvent > 0 and (1 / dropsPerEvent) or 999
                     ratioText:SetText(string.format("1:%d", math.floor(ratio)))
 
                     -- Fixed height for single line items (no wrapping now)
@@ -653,11 +729,11 @@ function FTT:UpdateDisplayInternal()
 
                     -- Store item link and name for tooltip and hiding
                     lineButton.itemLink = item.data.link
-                    lineButton.itemName = item.name
+                    lineButton.itemName = item.name  -- Display name only
+                    lineButton.itemIDKey = item.id  -- Database key (itemID)
 
-                    -- Get item ID from link and store as string for consistency
-                    local itemID = item.data.link:match("item:(%d+)")
-                    lineButton.itemID = itemID and tostring(itemID) or nil
+                    -- Store itemID for highlighting (already have it from item.id)
+                    lineButton.itemID = tostring(item.id)
 
                     -- Enable left-click and right-click
                     lineButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -689,8 +765,8 @@ function FTT:UpdateDisplayInternal()
                             end
                             FTT:UpdateDisplay()
                         -- Right-click: hide item
-                        elseif button == "RightButton" and self.itemName then
-                            FTT.hiddenItems[self.itemName] = true
+                        elseif button == "RightButton" and self.itemIDKey then
+                            FTT.hiddenItems[self.itemIDKey] = true
                             FTT:UpdateDisplay()
                         end
                     end)

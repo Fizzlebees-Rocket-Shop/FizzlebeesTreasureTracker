@@ -24,6 +24,9 @@ L["CANCEL"] = "取消"
 L["ITEM_FILTER"] = "物品過濾器（物品ID）"
 L["ITEM_FILTER_HINT"] = "隱藏除此ID外的所有物品"
 
+-- Treasure
+L["TREASURE_NAME"] = "寶藏 %s"  -- %s = 區域名稱
+
 -- Settings
 L["FILTER_BY_ZONE"] = "按區域過濾"
 L["SHOW_INACTIVE"] = "顯示舊的"

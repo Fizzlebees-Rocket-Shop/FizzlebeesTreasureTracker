@@ -2,12 +2,12 @@
 ## Title: Fizzlebee's Treasure Tracker
 ## Notes: Track mob kills and loot drops with Fizzlebee's patented drop rate calculator! Time to count the shinies!
 ## Author: Fizzlebee Firebolt <Boulder Dash Heroes>
-## Version: 1.0.2
+## Version: 1.1.0
 ## SavedVariables: FizzlebeesTreasureTrackerDB
 ## IconTexture: Interface\Icons\inv_ability_fateboundrogue_handoffateheads
 ## X-Patch: 11.0.5
 ## X-Date: 2025-10-22
-## X-Changelog: HOTFIX Patch 11.0.5 - GetTime() to time() migration, Debug system overhaul
+## X-Changelog: NEW FEATURE v1.1.0 - Treasure chest tracking with zone-based grouping
 
 # Localization
 Locales\enUS.lua

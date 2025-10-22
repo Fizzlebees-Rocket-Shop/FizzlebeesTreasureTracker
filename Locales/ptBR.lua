@@ -24,6 +24,9 @@ L["CANCEL"] = "Cancelar"
 L["ITEM_FILTER"] = "Filtro de Item (ID do Item)"
 L["ITEM_FILTER_HINT"] = "Oculta todos os itens exceto este ID"
 
+-- Treasure
+L["TREASURE_NAME"] = "Tesouro %s"  -- %s = nome da zona
+
 -- Settings
 L["FILTER_BY_ZONE"] = "Filtrar por Zona"
 L["SHOW_INACTIVE"] = "Mostrar mais antigos"

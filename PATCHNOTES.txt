@@ -2,6 +2,61 @@
 Fizzlebee's Treasure Tracker - Patch Notes
 ================================================================================
 
+Version 1.1.0 (2025-10-22) - Treasure Tracking Feature
+--------------------------------------------------------------------------------
+
+Major new feature: Treasure chest tracking with zone-based grouping!
+
+NEW FEATURES:
+- Treasure chest detection (GameObject vs Creature differentiation)
+- Zone-based treasure grouping (all chests per zone in one entry)
+- Treasure-specific metrics (lootCount instead of kills)
+- Gold tracking per mob/treasure with header display
+- Session/total treasure loot count (e.g., "Treasure Lorenhall 1/21")
+- Separate active state tracking for treasures (5-minute window)
+- Pending items queue for cache-delayed item resolution
+
+IMPROVEMENTS:
+- Gold parsing from loot slots (TWW-compatible, no GetLootSlotMoney)
+- ItemID-based database keys for consistent tracking
+- Improved treasure detection heuristic (GUID + timestamp-based)
+- Fallback mechanisms for uncached items
+- Compact header format ("Treasure Lorenhall [13g 75s] 1/21")
+- Localisation: "Schatz" (DE), "Treasure" (EN), 10 languages updated
+
+UI ENHANCEMENTS:
+- Gold displayed in mob/treasure headers with coin icons
+- Session/total format for treasures matches mob display
+- Items with failed quality checks now show (fallback for uncached)
+- Cleaner header layout without colons
+
+TECHNICAL:
+- Database migration v2: isTreasure flag for all entries
+- Database migration v3: lastSeen and lootCount fields for treasures
+- Database migration v4: ItemID-based loot keys migration
+- sessionTreasureLootCount tracking (separate from mob kills)
+- ProcessPendingItems() background resolver (1-second interval)
+- OnUpdate handler for pending item resolution
+- Treasure names stored in English, localised for display
+
+BUG FIXES:
+- Fixed: Treasures appearing as inactive immediately after looting
+- Fixed: Session timer not starting on first treasure loot
+- Fixed: Gold parsing for The War Within (string-based extraction)
+- Fixed: Items not appearing due to nil itemQuality checks
+- Fixed: Division by zero in treasure loot sorting
+- Fixed: Backwards compatibility treasure name checks simplified
+- Fixed: Heartbeat errors with hideButton field naming
+
+LOCALISATIONS:
+All 10 languages updated with shorter treasure names:
+- German: "Schatzfund" → "Schatz"
+- English: "Treasure Find" → "Treasure"
+- Spanish, French, Italian, Portuguese, Russian, Korean, Chinese
+
+PREVIOUS RELEASES:
+--------------------------------------------------------------------------------
+
 Version 1.0.2 (2025-10-22)
 --------------------------------------------------------------------------------
 

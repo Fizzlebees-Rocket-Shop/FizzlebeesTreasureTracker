@@ -24,6 +24,9 @@ L["CANCEL"] = "취소"
 L["ITEM_FILTER"] = "아이템 필터 (아이템 ID)"
 L["ITEM_FILTER_HINT"] = "이 ID를 제외한 모든 아이템 숨기기"
 
+-- Treasure
+L["TREASURE_NAME"] = "보물 %s"  -- %s = 지역 이름
+
 -- Settings
 L["FILTER_BY_ZONE"] = "지역별 필터"
 L["SHOW_INACTIVE"] = "오래된 항목 표시"

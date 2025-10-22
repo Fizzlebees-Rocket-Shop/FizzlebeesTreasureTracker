@@ -49,6 +49,7 @@ FTT.INFO_FRAME_WIDTH = FTT.ENTRY_WIDTH + 20  -- 340px (for gold/duration display
 
 FTT.sessionKills = {} -- Track kills in current session
 FTT.sessionLoot = {} -- Track loot in current session
+FTT.sessionTreasureLootCount = {} -- Track number of treasure loot events per treasure in current session (treasures only!)
 FTT.sessionGold = 0 -- Track total gold in session (in copper)
 FTT.totalGold = 0 -- Track total gold overall (in copper)
 FTT.sessionDamage = 0 -- Track total damage in session
@@ -316,49 +317,85 @@ function FTT:RecordKill(mobName)
     end
 end
 
--- Record loot from a mob
+-- Record loot from a mob or treasure
 -- CALLED BY: Events.lua (LOOT_OPENED handler)
-function FTT:RecordLoot(mobName, itemLink, quantity)
-    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r mobName=" .. tostring(mobName) .. ", itemLink=" .. tostring(itemLink) .. ", quantity=" .. tostring(quantity))
+function FTT:RecordLoot(mobName, itemID, itemLink, quantity, isTreasure)
+    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r mobName=" .. tostring(mobName) .. ", itemID=" .. tostring(itemID) .. ", itemLink=" .. tostring(itemLink) .. ", quantity=" .. tostring(quantity) .. ", isTreasure=" .. tostring(isTreasure))
 
-    if not mobName or not itemLink then
-        self:DebugPrint("|cffFF0000FTT RecordLoot:|r Early return - mobName or itemLink is nil")
+    if not mobName or not itemID then
+        self:DebugPrint("|cffFF0000FTT RecordLoot:|r Early return - mobName or itemID is nil")
         return
+    end
+
+    -- Start session timer on first loot
+    if self.sessionStartTime == 0 then
+        self.sessionStartTime = GetTime()
+        self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Started session timer")
     end
 
     local mobs = FizzlebeesTreasureTrackerDB.mobs
     if not mobs[mobName] then
-        self:DebugPrint("|cffFF0000FTT RecordLoot:|r Mob " .. mobName .. " not found in DB!")
-        return
+        -- Create new entry for treasure or mob
+        mobs[mobName] = {
+            kills = 0,
+            loot = {},
+            isTreasure = isTreasure or false,
+            lastSeen = time(),
+            lootCount = 0  -- Track number of loot events for treasures
+        }
+        self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Created new entry for " .. mobName .. " (isTreasure=" .. tostring(isTreasure) .. ")")
+    else
+        -- Entry exists, ensure isTreasure flag is set if this is treasure loot
+        if isTreasure and not mobs[mobName].isTreasure then
+            mobs[mobName].isTreasure = true
+            self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Updated isTreasure flag for existing entry: " .. mobName)
+        end
     end
 
-    local itemName = GetItemInfo(itemLink) or itemLink
-    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r itemName: " .. tostring(itemName))
+    -- Update lastSeen and lootCount for treasures (they don't have lastKillTime or kills)
+    if isTreasure then
+        mobs[mobName].lastSeen = time()
+        mobs[mobName].lootCount = (mobs[mobName].lootCount or 0) + 1
+
+        -- Track session treasure loot count (number of treasure chests opened this session)
+        if not self.sessionTreasureLootCount[mobName] then
+            self.sessionTreasureLootCount[mobName] = 0
+        end
+        self.sessionTreasureLootCount[mobName] = self.sessionTreasureLootCount[mobName] + 1
+
+        self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Updated lastSeen and lootCount for treasure: " .. mobName .. " (sessionTreasureLootCount=" .. self.sessionTreasureLootCount[mobName] .. ", totalLootCount=" .. mobs[mobName].lootCount .. ")")
+    end
+
+    -- CRITICAL: Use itemID as database key for consistency
+    -- itemID is always stable (e.g., "12345"), unlike itemLink which varies by format
+    -- Store itemLink for display purposes only
+    local itemName = GetItemInfo(itemLink) or itemID  -- For display/debug purposes
+    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r itemName: " .. tostring(itemName) .. ", itemID: " .. tostring(itemID))
 
     local loot = mobs[mobName].loot
 
-    -- Initialize total loot tracking
-    if not loot[itemName] then
-        loot[itemName] = {
+    -- Initialize total loot tracking (use itemID as key)
+    if not loot[itemID] then
+        loot[itemID] = {
             count = 0,
-            link = itemLink
+            link = itemLink  -- Store link for display
         }
         self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Created new loot entry for " .. itemName)
     end
 
     -- Increment total loot count
-    loot[itemName].count = loot[itemName].count + (quantity or 1)
-    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Total count for " .. itemName .. ": " .. loot[itemName].count)
+    loot[itemID].count = loot[itemID].count + (quantity or 1)
+    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Total count for " .. itemName .. ": " .. loot[itemID].count)
 
-    -- Track session loot
+    -- Track session loot (use itemID as key)
     if not self.sessionLoot[mobName] then
         self.sessionLoot[mobName] = {}
     end
-    if not self.sessionLoot[mobName][itemName] then
-        self.sessionLoot[mobName][itemName] = 0
+    if not self.sessionLoot[mobName][itemID] then
+        self.sessionLoot[mobName][itemID] = 0
     end
-    self.sessionLoot[mobName][itemName] = self.sessionLoot[mobName][itemName] + (quantity or 1)
-    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Session count for " .. itemName .. ": " .. self.sessionLoot[mobName][itemName])
+    self.sessionLoot[mobName][itemID] = self.sessionLoot[mobName][itemID] + (quantity or 1)
+    self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Session count for " .. itemName .. ": " .. self.sessionLoot[mobName][itemID])
 
     -- Track item quality statistics
     local _, _, itemQuality = GetItemInfo(itemLink)
@@ -384,6 +421,47 @@ function FTT:RecordLoot(mobName, itemLink, quantity)
         mobs[mobName].autoExpanded = true
         self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Auto-expanded " .. mobName)
     end
+end
+
+-- Record gold from a mob or treasure
+-- CALLED BY: Events.lua (LOOT_OPENED handler for gold slots)
+function FTT:RecordGold(mobName, amount)
+    self:DebugPrint("|cffFFD700FTT RecordGold:|r mobName=" .. tostring(mobName) .. ", amount=" .. tostring(amount))
+
+    if not mobName or not amount or amount <= 0 then
+        self:DebugPrint("|cffFF0000FTT RecordGold:|r Early return - invalid parameters")
+        return
+    end
+
+    local mobs = FizzlebeesTreasureTrackerDB.mobs
+
+    -- Ensure mob entry exists
+    if not mobs[mobName] then
+        mobs[mobName] = {
+            kills = 0,
+            loot = {},
+            gold = 0,  -- Total gold from this mob
+            sessionGold = 0,  -- Gold in current session
+            isTreasure = mobName:match("^Treasure Find ") and true or false,
+            lastSeen = time(),
+            lootCount = 0
+        }
+        self:DebugPrint("|cffFFD700FTT RecordGold:|r Created new entry for " .. mobName)
+    end
+
+    -- Initialize gold fields if they don't exist (for old entries)
+    if not mobs[mobName].gold then
+        mobs[mobName].gold = 0
+    end
+    if not mobs[mobName].sessionGold then
+        mobs[mobName].sessionGold = 0
+    end
+
+    -- Track gold
+    mobs[mobName].gold = mobs[mobName].gold + amount
+    mobs[mobName].sessionGold = mobs[mobName].sessionGold + amount
+
+    self:DebugPrint("|cffFFD700FTT RecordGold:|r Updated gold for " .. mobName .. " - session: " .. self:FormatMoney(mobs[mobName].sessionGold) .. ", total: " .. self:FormatMoney(mobs[mobName].gold))
 end
 
 -- Update header layout based on visibility settings
@@ -726,11 +804,13 @@ function FTT:Initialize()
     local INACTIVE_THRESHOLD = 300  -- 5 minutes
     if FizzlebeesTreasureTrackerDB.mobs then
         for mobName, mobData in pairs(FizzlebeesTreasureTrackerDB.mobs) do
-            local lastKillTime = mobData.lastKillTime or 0
-            local timeSince = currentTime - lastKillTime
+            -- For treasures, use lastSeen; for mobs, use lastKillTime
+            local isTreasure = mobData.isTreasure or mobName:match("^Treasure Find ")
+            local lastActivity = isTreasure and (mobData.lastSeen or 0) or (mobData.lastKillTime or 0)
+            local timeSince = currentTime - lastActivity
 
-            -- If no lastKillTime (old data) or older than 5 minutes, collapse
-            if lastKillTime == 0 or timeSince > INACTIVE_THRESHOLD then
+            -- If no lastActivity (old data) or older than 5 minutes, collapse
+            if lastActivity == 0 or timeSince > INACTIVE_THRESHOLD then
                 self.expandedMobs[mobName] = false
             end
         end

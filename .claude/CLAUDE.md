@@ -1,8 +1,8 @@
 # Fizzlebee's Treasure Tracker - Project Documentation
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **API Version:** 1
-**WoW Interface:** 11.0.2.05 (The War Within)
+**WoW Interface:** 11.0.5 (The War Within)
 **Author:** Fizzlebee (Vivian Voss) - Boulder Dash Heroes
 **Licence:** BSD 3-Clause
 **Release Date:** 22nd October 2025

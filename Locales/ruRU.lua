@@ -24,6 +24,9 @@ L["CANCEL"] = "Отмена"
 L["ITEM_FILTER"] = "Фильтр предметов (ID предмета)"
 L["ITEM_FILTER_HINT"] = "Скрывает все предметы кроме этого ID"
 
+-- Treasure
+L["TREASURE_NAME"] = "Сокровище %s"  -- %s = название зоны
+
 -- Settings
 L["FILTER_BY_ZONE"] = "Фильтр по зоне"
 L["SHOW_INACTIVE"] = "Показать старые"
