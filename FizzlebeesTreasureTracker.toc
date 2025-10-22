@@ -1,0 +1,37 @@
+## Interface: 110205
+## Title: Fizzlebee's Treasure Tracker
+## Notes: Track mob kills and loot drops with Fizzlebee's patented drop rate calculator! Time to count the shinies!
+## Author: Fizzlebee Firebolt <Boulder Dash Heroes>
+## Version: 1.0.251022.0842
+## SavedVariables: FizzlebeesTreasureTrackerDB
+## IconTexture: Interface\Icons\inv_ability_fateboundrogue_handoffateheads
+## X-Patch: 11.0.5
+## X-Date: 2025-10-22
+## X-Changelog: HOTFIX Patch 11.0.5 - GetTime() to time() migration, Debug system overhaul
+
+# Localization
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\frFR.lua
+Locales\esES.lua
+Locales\ruRU.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
+Locales\koKR.lua
+Locales\ptBR.lua
+Locales\itIT.lua
+
+# Core Libraries
+Libs\Core.lua
+Libs\API.lua
+
+# UI Components
+Libs\UI\Main.lua
+Libs\UI\Settings.lua
+Libs\UI\Tracker.lua
+
+# Event Handlers
+Libs\Events.lua
+
+# Main Initialization
+FizzlebeesTreasureTracker.lua

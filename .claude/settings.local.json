@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\FizzlebeesTreasureTracker.lua\")",
+      "Bash(wc -l \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\\UI.lua\")",
+      "Bash(ls -la \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\")",
+      "Bash(ls -la \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\\UI\")",
+      "Bash(wc -l \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\\Core.lua\")",
+      "Bash(wc -l \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\\Events.lua\")",
+      "Bash(wc -l \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\\UI\\Main.lua\")",
+      "Bash(wc -l \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\\UI\\Settings.lua\")",
+      "Bash(wc -l \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Libs\\UI\\Tracker.lua\")",
+      "Bash(/ftt debug)",
+      "Read(//c/Program Files (x86)/World of Warcraft/_retail_/WTF/**)",
+      "Read(//c/Program Files (x86)/World of Warcraft/_retail_/WTF/Account/468005689#1/SavedVariables/**)",
+      "Bash(ls -la \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Locales\")",
+      "Bash(ls -la \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\Textures\")",
+      "Bash(python create_dot.py)",
+      "Bash(for f in frFR.lua itIT.lua koKR.lua ptBR.lua ruRU.lua zhCN.lua zhTW.lua)",
+      "Bash(do echo \"=== $f ===\")",
+      "Bash(done)",
+      "Bash(for f in esES.lua frFR.lua itIT.lua koKR.lua ptBR.lua ruRU.lua zhCN.lua zhTW.lua)",
+      "Bash(for f in esES.lua frFR.lua itIT.lua ptBR.lua)",
+      "Bash(for f in koKR.lua ruRU.lua zhCN.lua zhTW.lua)",
+      "Bash(ls -la \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\")",
+      "Bash(mkdir -p \"c:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\FizzlebeesTreasureTracker\\.claude\")",
+      "Read(//c/Program Files (x86)/World of Warcraft/_retail_/WTF/Account/**)",
+      "Bash(git init)",
+      "Bash(git config user.name \"Fizzlebee\")",
+      "Bash(git config user.email \"fizzlebee@boulderdash.local\")",
+      "Read(//c/Users/Administrator/**)",
+      "Bash(git config --global user.name)",
+      "Bash(git config --global user.email)",
+      "Bash(gh --version)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
