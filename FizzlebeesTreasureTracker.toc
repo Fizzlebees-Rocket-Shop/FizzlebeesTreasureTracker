@@ -2,7 +2,7 @@
 ## Title: Fizzlebee's Treasure Tracker
 ## Notes: Track mob kills and loot drops with Fizzlebee's patented drop rate calculator! Time to count the shinies!
 ## Author: Fizzlebee Firebolt <Boulder Dash Heroes>
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: FizzlebeesTreasureTrackerDB
 ## IconTexture: Interface\Icons\inv_ability_fateboundrogue_handoffateheads
 ## X-Patch: 11.0.5
