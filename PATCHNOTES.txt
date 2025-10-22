@@ -2,7 +2,36 @@
 Fizzlebee's Treasure Tracker - Patch Notes
 ================================================================================
 
-Version 1.0.0 (2025-10-22)
+Version 1.0.2 (2025-10-22)
+--------------------------------------------------------------------------------
+
+Documentation and release infrastructure improvements.
+
+IMPROVEMENTS:
+- Migrated CLAUDE.md to BBC English (formal documentation standard)
+- Created modular documentation structure:
+  - CLAUDE_ARCHITECTURE.md (file structure, modules, design patterns)
+  - CLAUDE_API.md (complete public API reference)
+  - CLAUDE_DEVELOPMENT.md (dev workflow, testing, debugging)
+  - CLAUDE_DE.md (full German documentation backup)
+- Added example installation path to README.md for clarity
+- Fixed GitHub Actions workflow excluding release/ temporary folder from ZIP
+- Improved PATCHNOTES.txt format and structure
+
+TECHNICAL:
+- Release ZIP now correctly excludes: .claude/, .git/, .github/, .gitignore, release/, API_DOCUMENTATION.md
+- No more empty nested release/ folder in distributed ZIP files
+- Documentation follows BBC English Golden Rule (#5)
+- Smaller, focused documentation files (better maintainability)
+
+PREVIOUS RELEASES:
+--------------------------------------------------------------------------------
+
+Version 1.0.1 (2025-10-22) - Build system test
+- Tested automated GitHub Actions release workflow
+- Verified SemVer versioning system
+
+Version 1.0.0 (2025-10-22) - Initial stable release
 --------------------------------------------------------------------------------
 
 Initial stable release with Semantic Versioning.

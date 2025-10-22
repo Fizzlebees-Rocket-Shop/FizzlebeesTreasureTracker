@@ -25,7 +25,7 @@ Track mob kills and loot drops with intelligent drop rate calculation for World 
 2. Extract the ZIP file
 3. Move the `FizzlebeesTreasureTracker` folder to:
    ```
-   World of Warcraft/_retail_/Interface/AddOns/
+   World of Warcraft\_retail_\Interface\AddOns\
    ```
    **Example path:**
    ```

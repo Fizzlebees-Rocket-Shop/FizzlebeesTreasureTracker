@@ -31,7 +31,9 @@
       "Read(//c/Users/Administrator/**)",
       "Bash(git config --global user.name)",
       "Bash(git config --global user.email)",
-      "Bash(gh --version)"
+      "Bash(gh --version)",
+      "Bash(git commit -m \"feat: implement SemVer versioning and automated GitHub release system\n\n- Migrate from 1.0.251022.0842 to 1.0.0 (Semantic Versioning)\n- Add GitHub Actions workflow for automated releases\n- Add interactive release helper script (.claude/release.sh)\n- Create README.md (concise, focused, ~85 lines)\n- Convert PATCHNOTES.md to PATCHNOTES.txt (plain text format)\n- Update CLAUDE.md with comprehensive release process documentation\n- Fix .gitignore to include .github/ in repository\")",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []
