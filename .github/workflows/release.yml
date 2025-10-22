@@ -1,0 +1,106 @@
+# ==============================================================================
+# Fizzlebee's Treasure Tracker - GitHub Actions Release Workflow
+# Copyright (c) 2025 Vivian Voss (Fizzlebee) <Boulder Dash Heroes>
+# Licensed under the BSD 3-Clause License (see LICENSE file)
+# ==============================================================================
+# This workflow automates the release process:
+# 1. Triggers on git tag push matching v*.*.* (e.g., v1.0.0, v1.2.3)
+# 2. Creates a ZIP file excluding development files (.claude/, .git/, etc.)
+# 3. Creates a GitHub Release with changelog
+# 4. Attaches the ZIP as a release asset
+# ==============================================================================
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on SemVer tags (v1.0.0, v1.2.3, etc.)
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # Required to create releases
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
+
+      # Step 2: Extract version from tag
+      - name: Extract version
+        id: version
+        run: |
+          # Remove 'v' prefix from tag (v1.0.0 → 1.0.0)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      # Step 3: Create release ZIP
+      - name: Create release archive
+        run: |
+          # Create temporary directory for filtered files
+          mkdir -p release/FizzlebeesTreasureTracker
+
+          # Copy all files except exclusions
+          rsync -av \
+            --exclude='.claude/' \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.gitignore' \
+            --exclude='*.zip' \
+            ./ release/FizzlebeesTreasureTracker/
+
+          # Create ZIP archive
+          cd release
+          zip -r ../FizzlebeesTreasureTracker-${{ steps.version.outputs.version }}.zip FizzlebeesTreasureTracker
+          cd ..
+
+          # Show ZIP contents for verification
+          echo "=== ZIP Contents ==="
+          unzip -l FizzlebeesTreasureTracker-${{ steps.version.outputs.version }}.zip | head -30
+
+      # Step 4: Extract changelog for this version
+      - name: Extract changelog
+        id: changelog
+        run: |
+          # Extract relevant section from PATCHNOTES.txt
+          if [ -f "PATCHNOTES.txt" ]; then
+            # Extract first 50 lines for release notes
+            echo "Changelog extracted from PATCHNOTES.txt" > changelog.txt
+            head -50 PATCHNOTES.txt >> changelog.txt
+          else
+            echo "Release ${{ steps.version.outputs.version }}" > changelog.txt
+            echo "" >> changelog.txt
+            echo "See PATCHNOTES.txt for full changelog." >> changelog.txt
+          fi
+
+          # Display changelog
+          echo "=== Changelog ==="
+          cat changelog.txt
+
+      # Step 5: Create GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Fizzlebee's Treasure Tracker v${{ steps.version.outputs.version }}
+          body_path: changelog.txt
+          files: FizzlebeesTreasureTracker-${{ steps.version.outputs.version }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 6: Success message
+      - name: Release complete
+        run: |
+          echo "========================================="
+          echo "Release v${{ steps.version.outputs.version }} created successfully!"
+          echo "========================================="
+          echo ""
+          echo "Download: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"

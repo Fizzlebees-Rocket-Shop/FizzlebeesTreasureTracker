@@ -1,6 +1,6 @@
 # Fizzlebee's Treasure Tracker - Projekt Dokumentation
 
-**Version:** 1.0.251022.0842
+**Version:** 1.0.0
 **API Version:** 1
 **WoW Interface:** 11.0.2.05 (The War Within)
 **Author:** Fizzlebee (Vivian Voss) - Boulder Dash Heroes
@@ -66,71 +66,53 @@ Siehe: [GOLDENE REGEL #1](#-goldene-regel-1-debug-ausgaben-immer-hinter-settings
 
 ---
 
-## 📋 Versionsnummern-System
+## 📋 Versioning System (Semantic Versioning)
 
-FTT verwendet ein zweiteiliges Versionsnummern-System:
-
-```
-1.0.251022.0842
-└─┬─┘ └──┬───┘
-  │      └─────── Patch Level (Build-Zeitstempel)
-  └────────────── Version (Major.Minor)
-```
-
-### Aufschlüsselung:
-
-| Teil | Wert | Bedeutung | Verwendung |
-|------|------|-----------|------------|
-| **Version** | `1.0` | Major.Minor | Funktions-Version |
-| **Patch Level** | `251022.0842` | YYmmDD.HHMM | Build-Zeitstempel |
-
-### Patch Level Format:
+FTT uses **Semantic Versioning (SemVer)** for clear, standardised version numbering:
 
 ```
-251022.0842
-││││││ ││││
-│││││└─┴┴┴┴─ Zeit: 08:42 (HH:MM)
-││││└──────── Tag: 22
-│││└───────── Monat: 10 (Oktober)
-└┴┴────────── Jahr: 25 (2025)
+1.0.0
+│ │ │
+│ │ └─── PATCH - Bug fixes, minor changes
+│ └───── MINOR - New features (backwards compatible)
+└─────── MAJOR - Breaking changes
 ```
 
-### Verwendung:
+### Version Breakdown:
 
-**Vollständige Identifikation (Version + Patch Level):**
-```lua
-"1.0.251022.0842"  -- Zeigt Version UND wann gebaut wurde
+| Component | Meaning | When to Increment | Example |
+|-----------|---------|-------------------|---------|
+| **MAJOR** | Breaking changes | API changes, incompatible updates | 1.0.0 → 2.0.0 |
+| **MINOR** | New features | New functionality (backwards compatible) | 1.0.0 → 1.1.0 |
+| **PATCH** | Bug fixes | Bug fixes, small improvements | 1.0.0 → 1.0.1 |
+
+### Version Examples:
+
+```
+1.0.0   - Initial stable release
+1.0.1   - Hotfix for critical bug
+1.1.0   - New feature added (e.g., DPS tracking)
+1.1.1   - Bug fix in DPS feature
+2.0.0   - Major redesign or API breaking change
 ```
 
-**Nur Version (Feature-Tracking):**
-```lua
-"1.0"  -- Erste stabile Version
-"1.1"  -- Neue Features hinzugefügt
-"2.0"  -- Breaking Changes
+### Why SemVer?
+
+**Advantages:**
+- ✅ Industry-standard format
+- ✅ Clear communication of change severity
+- ✅ Compatible with all addon platforms (CurseForge, Wago, WoWInterface)
+- ✅ Automatic tooling support (GitHub Releases, CI/CD)
+- ✅ Predictable version ordering
+
+**Previous System (Deprecated):**
+```
+1.0.251022.0842  ❌ Non-standard, confusing for tooling
 ```
 
-**Nur Patch Level (Build-Zeitpunkt):**
-```lua
-"251022.0842"  -- Gebaut am 22. Okt 2025, 08:42
-"251022.1430"  -- Zweiter Build am selben Tag, 14:30
+**New System (Current):**
 ```
-
-### Generierung des Patch Levels:
-
-```bash
-# IMMER date Command verwenden:
-date +"%y%m%d.%H%M"  # → 251022.0842
-
-# NIE manuell schreiben oder raten!
-```
-
-### Im TOC:
-
-```ini
-## Version: 1.0.251022.0842
-           └─┬─┘ └──┬───┘
-             │      └─────── Patch Level (bei jedem Build neu)
-             └────────────── Version (nur bei Feature-Changes)
+1.0.0  ✅ Clean, standard-compliant
 ```
 
 ---
@@ -163,14 +145,15 @@ Siehe Details: [Goldene Regeln](#wichtige-hinweise-für-entwickler)
 
 ---
 
-## 📦 Release-Prozess
+## 📦 Release Process (GitHub Actions)
 
-### Philosophie: Warum liegt das Release-Skript in `.claude/`?
+### Philosophy: Automated Releases via GitHub
 
 The `.claude/` directory serves as the **development workspace** for this project. It contains:
 
 - **CLAUDE.md** - Comprehensive project documentation
-- **release.ps1** - Automated release tooling
+- **release.sh** - Interactive release helper script
+- **release.ps1** - Legacy PowerShell release script (deprecated)
 - **Any temporary development files** - Scripts, notes, experiments
 
 **Design Principle:** *Keep the project root clean for end-users.*
@@ -179,135 +162,349 @@ When players download FizzlebeesTreasureTracker, they should receive **only the 
 
 By housing all development artefacts within `.claude/`, we achieve:
 - ✅ Clean project structure for distribution
-- ✅ Single exclusion rule for releases (`.claude/*`)
+- ✅ Single exclusion rule for releases (`.claude/*`, `.git/`, `.github/`)
 - ✅ Logical grouping of development resources
 - ✅ No confusion for end-users about which files matter
 
-### Automated Release Script
+### Release Workflow Overview
 
-**Location:** `.claude/release.ps1`
+**Every git push with a version tag triggers an automated GitHub Release:**
 
-**Purpose:** Automates the complete release process in a single command.
+1. Developer runs interactive helper script: `.claude/release.sh`
+2. Script asks: "patch / minor / major?"
+3. Script updates TOC file with new version
+4. Script creates git commit and tag (e.g., `v1.0.1`)
+5. Script pushes to GitHub
+6. **GitHub Actions automatically:**
+   - Creates filtered ZIP (excludes `.claude/`, `.git/`, `.github/`, `.gitignore`)
+   - Creates GitHub Release with changelog
+   - Attaches ZIP as downloadable asset
 
-### Usage
+**No manual ZIP creation needed. No manual GitHub Release creation. Fully automated.**
 
-**Basic Release (creates 1.0.YYmmDD.HHMM):**
-```powershell
-cd "C:\Program Files (x86)\World of Warcraft\_retail_\Interface\AddOns\FizzlebeesTreasureTracker"
-.\.claude\release.ps1
+---
+
+### Release Helper Script
+
+**Location:** `.claude/release.sh`
+
+**Purpose:** Interactive script that guides you through the release process.
+
+#### Usage
+
+```bash
+# Navigate to project directory
+cd "c:/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns/FizzlebeesTreasureTracker"
+
+# Run release helper
+./.claude/release.sh
 ```
 
-**New Version Release (e.g., 1.1 or 2.0):**
-```powershell
-.\.claude\release.ps1 -Version "1.1"
+#### Interactive Prompts
+
+```
+================================================================================
+ Fizzlebee's Treasure Tracker - Interactive Release Helper
+================================================================================
+
+Current version: 1.0.0
+
+What type of release would you like to create?
+
+  patch  - Bug fixes, small changes        (1.0.0 → 1.0.1)
+  minor  - New features, backwards compatible (1.0.0 → 1.1.0)
+  major  - Breaking changes               (1.0.0 → 2.0.0)
+
+Release type [patch/minor/major]: patch
+
+Version bump: 1.0.0 → 1.0.1
+
+Create release v1.0.1? [y/N]: y
+
+[INFO] Updating TOC file...
+[OK]   TOC file updated to version 1.0.1
+[INFO] Creating git commit...
+[INFO] Creating git tag v1.0.1...
+[OK]   Git commit and tag created
+[INFO] Pushing to GitHub...
+[OK]   Pushed to GitHub
+[OK]   GitHub Actions is now building the release
+
+================================================================================
+ Release v1.0.1 created successfully!
+================================================================================
+
+[OK]   GitHub Actions is now building the release
+[INFO] Monitor progress: https://github.com/Fizzlebees-Rocket-Shop/FizzlebeesTreasureTracker/actions
+[INFO] Release will be available at: https://github.com/Fizzlebees-Rocket-Shop/FizzlebeesTreasureTracker/releases/tag/v1.0.1
 ```
 
-**Dry-Run (test without making changes):**
-```powershell
-.\.claude\release.ps1 -DryRun
-```
+#### What the Script Does
 
-### What the Script Does
+1. **Reads Current Version** - Extracts from `FizzlebeesTreasureTracker.toc`
+2. **Prompts for Release Type** - patch / minor / major
+3. **Calculates Next Version** - Following SemVer rules
+4. **Updates TOC File** - Modifies `## Version:` and `## X-Date:`
+5. **Creates Git Commit** - Message: `chore: bump version to X.Y.Z`
+6. **Creates Git Tag** - Format: `vX.Y.Z` (e.g., `v1.0.1`)
+7. **Pushes to GitHub** - Triggers GitHub Actions workflow
 
-1. **Generates Patch Level** - Creates timestamp: `YYmmDD.HHMM` (e.g., `251022.1430`)
-2. **Updates TOC File** - Modifies:
-   - `## Version: 1.0.251022.1430`
-   - `## X-Date: 2025-10-22`
-3. **Creates Filtered Copy** - Excludes development files:
-   - `.claude/` (documentation & scripts)
+---
+
+### GitHub Actions Workflow
+
+**Location:** `.github/workflows/release.yml`
+
+**Trigger:** Git tag push matching `v*.*.*` (e.g., `v1.0.0`, `v1.2.3`)
+
+#### Workflow Steps
+
+1. **Checkout Repository** - Fetches all code
+2. **Extract Version** - Removes `v` prefix from tag (`v1.0.1` → `1.0.1`)
+3. **Create Release ZIP** - Excludes:
+   - `.claude/` (development files)
    - `.git/` (version control)
+   - `.github/` (CI/CD workflows)
    - `.gitignore` (git configuration)
-4. **Generates ZIP** - Creates: `FizzlebeesTreasureTracker_1.0.251022.1430.zip`
-5. **Places ZIP** - Saves one level up (in AddOns directory)
-6. **Cleans Up** - Removes temporary files
+   - `*.zip` (old releases)
+4. **Extract Changelog** - From `PATCHNOTES.txt` (first 50 lines)
+5. **Create GitHub Release** - Automatic release creation
+6. **Upload ZIP Asset** - Attaches `FizzlebeesTreasureTracker-1.0.1.zip`
+
+#### Workflow Output
+
+```yaml
+Name: Fizzlebee's Treasure Tracker v1.0.1
+Tag: v1.0.1
+Assets:
+  - FizzlebeesTreasureTracker-1.0.1.zip
+Body: [Changelog from PATCHNOTES.txt]
+```
+
+---
 
 ### Release Checklist
 
-**Before Running Script:**
-1. ✅ Update [PATCHNOTES.md](../PATCHNOTES.md) with new features/fixes
-2. ✅ Ensure all changes are tested in-game
-3. ✅ Review Golden Rules compliance
+**Before Creating Release:**
 
-**Run Script:**
-```powershell
-.\.claude\release.ps1
+1. ✅ **Test all changes in-game** - Ensure functionality works
+2. ✅ **Update PATCHNOTES.txt** - Document changes clearly (plain text format)
+3. ✅ **Commit all changes** - `git add . && git commit -m "feat: description"`
+4. ✅ **Push to GitHub** - `git push` (without tag yet)
+5. ✅ **Review Golden Rules compliance** - BBC English, debug prints, etc.
+
+**Create Release:**
+
+```bash
+# Run interactive release helper
+./.claude/release.sh
+
+# Follow prompts:
+# 1. Choose release type (patch/minor/major)
+# 2. Confirm version bump
+# 3. Script handles the rest automatically
 ```
 
-**After Script Completes:**
-1. ✅ Test the generated ZIP:
-   - Extract to temporary location
-   - Verify folder name is `FizzlebeesTreasureTracker`
-   - Confirm `.claude/` is excluded
-   - Load in WoW and test functionality
-2. ✅ Commit changes to version control (if applicable):
-   ```bash
-   git add FizzlebeesTreasureTracker.toc PATCHNOTES.md
-   git commit -m "Release v1.0.251022.1430"
-   ```
-3. ✅ Upload ZIP to distribution platform (CurseForge, Wago, etc.)
+**After Release:**
 
-### Example Output
+1. ✅ **Monitor GitHub Actions** - Check build succeeds
+   - URL: https://github.com/Fizzlebees-Rocket-Shop/FizzlebeesTreasureTracker/actions
+2. ✅ **Verify GitHub Release** - Check ZIP attachment
+   - URL: https://github.com/Fizzlebees-Rocket-Shop/FizzlebeesTreasureTracker/releases
+3. ✅ **Test ZIP locally** - Download and test in WoW
+4. ✅ **Distribute to platforms** - CurseForge, Wago, WoWInterface (optional)
 
+---
+
+### Version Bump Examples
+
+#### Patch Release (Bug Fix)
+
+```bash
+# Current: 1.0.0
+# Scenario: Fixed bug in DPS calculation
+
+./.claude/release.sh
+> patch
+> y
+
+# Result: 1.0.1
+# Git tag: v1.0.1
+# GitHub Release: FizzlebeesTreasureTracker-1.0.1.zip
 ```
-================================================================================
- Fizzlebee's Treasure Tracker - Release Script
-================================================================================
 
-[INFO] Version Configuration:
-[INFO]   Major.Minor: 1.0
-[INFO]   Patch Level: 251022.1430
-[INFO]   Full Version: 1.0.251022.1430
-[INFO]   Release Date: 2025-10-22
-[INFO]   ZIP Filename: FizzlebeesTreasureTracker_1.0.251022.1430.zip
+#### Minor Release (New Feature)
 
-Step 1: Updating TOC file...
-[INFO] Updating TOC file: FizzlebeesTreasureTracker.toc
-[OK]   TOC file updated successfully
+```bash
+# Current: 1.0.1
+# Scenario: Added new tracking feature
 
-Step 2: Creating release ZIP...
-[INFO] Creating release ZIP: FizzlebeesTreasureTracker_1.0.251022.1430.zip
-[INFO] Source: C:\...\AddOns\FizzlebeesTreasureTracker
-[INFO] Destination: C:\...\AddOns\FizzlebeesTreasureTracker_1.0.251022.1430.zip
-[INFO] Exclusions: .claude, .git, .gitignore
-[INFO] Creating temporary directory...
-[INFO] Copying project files (excluding development files)...
-[INFO] Compressing files to ZIP...
-[OK]   Release ZIP created successfully
+./.claude/release.sh
+> minor
+> y
 
-================================================================================
- Release completed successfully!
-================================================================================
-
-[OK]   Version: 1.0.251022.1430
-[OK]   ZIP Location: C:\...\AddOns\FizzlebeesTreasureTracker_1.0.251022.1430.zip
-
-[INFO] Next steps:
-[INFO]   1. Update PATCHNOTES.md with release information
-[INFO]   2. Test the ZIP file by extracting and loading in WoW
-[INFO]   3. Commit changes to git (if applicable)
+# Result: 1.1.0
+# Git tag: v1.1.0
+# GitHub Release: FizzlebeesTreasureTracker-1.1.0.zip
 ```
+
+#### Major Release (Breaking Change)
+
+```bash
+# Current: 1.1.0
+# Scenario: Complete UI redesign
+
+./.claude/release.sh
+> major
+> y
+
+# Result: 2.0.0
+# Git tag: v2.0.0
+# GitHub Release: FizzlebeesTreasureTracker-2.0.0.zip
+```
+
+---
 
 ### Troubleshooting
 
-**Problem:** "Execution of scripts is disabled on this system"
+**Problem:** "Not a git repository"
 
-**Solution:** Enable PowerShell script execution:
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+**Solution:** Ensure you're in the project root directory:
+```bash
+cd "c:/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns/FizzlebeesTreasureTracker"
+pwd  # Should show project path
 ```
 
-**Problem:** ZIP contains `.claude/` folder
+**Problem:** "Permission denied" when running release.sh
 
-**Solution:** The script filters this automatically. If present, check:
-1. Is the script the latest version?
-2. Was `-DryRun` used accidentally?
-
-**Problem:** Wrong version number in ZIP
-
-**Solution:** Check TOC file was updated correctly:
-```powershell
-Select-String -Path "FizzlebeesTreasureTracker.toc" -Pattern "## Version:"
+**Solution:** Make script executable:
+```bash
+chmod +x .claude/release.sh
 ```
+
+**Problem:** GitHub Actions workflow fails
+
+**Solution:** Check workflow logs:
+1. Visit: https://github.com/Fizzlebees-Rocket-Shop/FizzlebeesTreasureTracker/actions
+2. Click failed workflow
+3. Review error messages
+4. Common issues:
+   - Invalid TOC file syntax
+   - Missing PATCHNOTES.md
+   - Permissions issue (check repository settings)
+
+**Problem:** ZIP still contains `.claude/` folder
+
+**Solution:** Check workflow file (`.github/workflows/release.yml`):
+```yaml
+# Should have exclusion in rsync:
+--exclude='.claude/' \
+--exclude='.git/' \
+--exclude='.github/' \
+--exclude='.gitignore'
+```
+
+**Problem:** Version number not updated in TOC
+
+**Solution:** Check `release.sh` script updated TOC correctly:
+```bash
+grep "## Version:" FizzlebeesTreasureTracker.toc
+# Should show: ## Version: X.Y.Z
+```
+
+---
+
+### Manual Release (Emergency Fallback)
+
+If GitHub Actions is unavailable, use legacy PowerShell script:
+
+```powershell
+# DEPRECATED - Only use if GitHub Actions fails
+.\.claude\release.ps1 -Version "1.0.1"
+```
+
+**Note:** This creates ZIP locally but does NOT create GitHub Release. You'll need to manually upload to GitHub.
+
+---
+
+### PATCHNOTES.txt Format
+
+**Location:** `PATCHNOTES.txt` (project root)
+
+**Format:** Plain text (not Markdown) - simple, focused, easy to read
+
+**Philosophy:**
+- ✅ Plain text for universal compatibility
+- ✅ Minimal formatting (ASCII boxes, line separators)
+- ✅ Focused content (no excessive detail)
+- ✅ Quick to write and update
+
+**Template:**
+
+```
+================================================================================
+Fizzlebee's Treasure Tracker - Patch Notes
+================================================================================
+
+Version X.Y.Z (YYYY-MM-DD)
+--------------------------------------------------------------------------------
+
+Brief description of the release.
+
+NEW FEATURES:
+- Feature 1
+- Feature 2
+
+BUG FIXES:
+- Fix 1
+- Fix 2
+
+TECHNICAL:
+- Technical detail 1
+- Technical detail 2
+
+PREVIOUS RELEASES:
+--------------------------------------------------------------------------------
+
+Version X.Y.Z (YYYY-MM-DD) - Brief title
+- Change 1
+- Change 2
+
+================================================================================
+```
+
+**Updating PATCHNOTES.txt:**
+
+1. Add new version at the **top** (newest first)
+2. Move previous version to "PREVIOUS RELEASES" section
+3. Keep formatting consistent (80-character lines, ASCII boxes)
+4. Use simple bullet points (no fancy Markdown)
+5. Be concise and factual
+
+**Example Update:**
+
+```bash
+# Before release, edit PATCHNOTES.txt:
+nano PATCHNOTES.txt
+
+# Add new version at top:
+Version 1.0.1 (2025-10-23)
+--------------------------------------------------------------------------------
+
+Fixed critical bug in DPS calculation.
+
+BUG FIXES:
+- Fixed DPS showing incorrect values after combat reset
+- Corrected damage tracking for SPELL_PERIODIC_DAMAGE events
+
+# Save and commit:
+git add PATCHNOTES.txt
+git commit -m "docs: update patchnotes for v1.0.1"
+```
+
+**GitHub Actions Integration:**
+
+The release workflow automatically extracts the first 50 lines of PATCHNOTES.txt and includes them in the GitHub Release body. This provides users with immediate changelog visibility without opening separate files.
 
 ---
 

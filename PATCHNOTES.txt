@@ -1,0 +1,68 @@
+================================================================================
+Fizzlebee's Treasure Tracker - Patch Notes
+================================================================================
+
+Version 1.0.0 (2025-10-22)
+--------------------------------------------------------------------------------
+
+Initial stable release with Semantic Versioning.
+
+NEW FEATURES:
+- Mob kill tracking (session & total)
+- Loot tracking with drop rates (1:X ratio format)
+- Gold tracking (session & total)
+- DPS calculation (real-time damage per second)
+- Quality statistics (Green, Blue, Purple, Orange items)
+- Performance metrics (kills/s, kills/h)
+- Item highlighting across all mobs
+- Zone filtering (show only current zone)
+- Auto-collapse for inactive mobs (>5 minutes)
+- Multi-language support (10 languages)
+
+UI FEATURES:
+- Transparent mode with adjustable opacity
+- Font scaling (Small, Medium, Large)
+- Auto-sizing or manual window resize
+- Position locking
+- Quality filtering (All, Green+, Blue+, Purple+)
+- Debug mode
+
+TECHNICAL:
+- Unix timestamps (time() instead of GetTime()) for stability
+- Entry pool system for performance
+- Public API for other addons
+- SavedVariables persistence
+- Heartbeat monitoring system
+
+PREVIOUS RELEASES:
+--------------------------------------------------------------------------------
+
+Version 1.0.251022.0842 (2025-10-22) - HOTFIX
+- CRITICAL: Fixed GetTime() reset issue after WoW Patch 11.0.5
+- Migrated all timestamps from GetTime() to time() (Unix timestamps)
+- Added automatic migration for old data
+- Improved debug output system (behind settings checkbox)
+- All debug prints now hidden by default
+
+Version 1.0 (2025-01-20) - Initial Release
+- First public release
+- All core features implemented
+
+================================================================================
+
+SUPPORT:
+- Bug Reports: https://github.com/Fizzlebees-Rocket-Shop/FizzlebeesTreasureTracker/issues
+- Documentation: See CLAUDE.md (.claude folder)
+- API Documentation: See API_DOCUMENTATION.md
+
+AUTHOR:
+Fizzlebee (Vivian Voss)
+Boulder Dash Heroes - EU Servers
+
+LICENSE:
+BSD 3-Clause - See LICENSE file
+
+================================================================================
+Last Updated: 2025-10-22
+WoW Interface: 11.0.5 (The War Within)
+================================================================================

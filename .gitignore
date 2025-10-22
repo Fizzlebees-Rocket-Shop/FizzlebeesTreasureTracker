@@ -42,6 +42,12 @@ Thumbs.db
 *.sublime-workspace
 
 # ==============================================================================
+# GitHub CI/CD
+# ==============================================================================
+# NOTE: .github/ is NOT ignored in git (we want workflows in the repository)
+# It is only excluded from release ZIPs (via GitHub Actions rsync --exclude)
+
+# ==============================================================================
 # Windows System Files
 # ==============================================================================
 # Windows-specific system files
