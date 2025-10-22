@@ -333,6 +333,9 @@ function FTT:RecordLoot(mobName, itemID, itemLink, quantity, isTreasure)
         self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Started session timer")
     end
 
+    -- Get current zone for treasure/mob tracking
+    local currentMapID = C_Map.GetBestMapForUnit("player")
+
     local mobs = FizzlebeesTreasureTrackerDB.mobs
     if not mobs[mobName] then
         -- Create new entry for treasure or mob
@@ -341,9 +344,10 @@ function FTT:RecordLoot(mobName, itemID, itemLink, quantity, isTreasure)
             loot = {},
             isTreasure = isTreasure or false,
             lastSeen = time(),
-            lootCount = 0  -- Track number of loot events for treasures
+            lootCount = 0,  -- Track number of loot events for treasures
+            zoneID = currentMapID  -- Store zone ID for filtering
         }
-        self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Created new entry for " .. mobName .. " (isTreasure=" .. tostring(isTreasure) .. ")")
+        self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Created new entry for " .. mobName .. " (isTreasure=" .. tostring(isTreasure) .. ", zoneID=" .. tostring(currentMapID) .. ")")
     else
         -- Entry exists, ensure isTreasure flag is set if this is treasure loot
         if isTreasure and not mobs[mobName].isTreasure then
@@ -352,10 +356,11 @@ function FTT:RecordLoot(mobName, itemID, itemLink, quantity, isTreasure)
         end
     end
 
-    -- Update lastSeen and lootCount for treasures (they don't have lastKillTime or kills)
+    -- Update lastSeen, lootCount, and zoneID for treasures (they don't have lastKillTime or kills)
     if isTreasure then
         mobs[mobName].lastSeen = time()
         mobs[mobName].lootCount = (mobs[mobName].lootCount or 0) + 1
+        mobs[mobName].zoneID = currentMapID  -- Update zone in case player moves
 
         -- Track session treasure loot count (number of treasure chests opened this session)
         if not self.sessionTreasureLootCount[mobName] then
@@ -363,7 +368,7 @@ function FTT:RecordLoot(mobName, itemID, itemLink, quantity, isTreasure)
         end
         self.sessionTreasureLootCount[mobName] = self.sessionTreasureLootCount[mobName] + 1
 
-        self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Updated lastSeen and lootCount for treasure: " .. mobName .. " (sessionTreasureLootCount=" .. self.sessionTreasureLootCount[mobName] .. ", totalLootCount=" .. mobs[mobName].lootCount .. ")")
+        self:DebugPrint("|cffFFFF00FTT RecordLoot:|r Updated lastSeen and lootCount for treasure: " .. mobName .. " (sessionTreasureLootCount=" .. self.sessionTreasureLootCount[mobName] .. ", totalLootCount=" .. mobs[mobName].lootCount .. ", zoneID=" .. tostring(currentMapID) .. ")")
     end
 
     -- CRITICAL: Use itemID as database key for consistency

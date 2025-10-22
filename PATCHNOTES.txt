@@ -2,6 +2,20 @@
 Fizzlebee's Treasure Tracker - Patch Notes
 ================================================================================
 
+Version 1.1.1 (2025-10-22) - Zone Filtering Bug Fix
+--------------------------------------------------------------------------------
+
+BUG FIXES:
+- Fixed: Treasures now respect zone filtering (hidden when player in different zone)
+- Fixed: Treasures now store and update zoneID on loot (matching mob behaviour)
+
+TECHNICAL:
+- Added zoneID tracking to RecordLoot() for treasure entries
+- Treasures now update zoneID on each loot event (handles player movement)
+
+PREVIOUS RELEASES:
+--------------------------------------------------------------------------------
+
 Version 1.1.0 (2025-10-22) - Treasure Tracking Feature
 --------------------------------------------------------------------------------
 
